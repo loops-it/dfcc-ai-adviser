@@ -1,7 +1,7 @@
 import { Document } from 'langchain/document';
 
 export type Message = {
-  type: 'apiMessage' | 'userMessage';
+  type: 'apiMessage' | 'userMessage' | 'finalMessage';
   message: string;
   isStreaming?: boolean;
   sourceDocs?: Document[];

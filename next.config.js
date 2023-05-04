@@ -6,6 +6,9 @@ const nextConfig = {
   //   config.experiments = { ...config.experiments, topLevelAwait: true };
   //   return config;
   // },
+  images: {
+    domains: ['localhost']
+  }
 };
 
 export default nextConfig;

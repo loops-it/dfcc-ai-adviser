@@ -4,19 +4,13 @@ import styles from '@/styles/Home.module.css';
 import { Message } from '@/types/chat';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import Image from 'next/image';
-// import { AiOutlineSend, AiOutlineClose, AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { BsFillMicMuteFill, BsFillMicFill } from 'react-icons/bs';
-
 import { Document } from 'langchain/document';
-import LoadingIcons from 'react-loading-icons';
 
 const AudioBot = () => {
   const [query, setQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordTranscript, setRecordTranscript] = useState('');
-  const [messagesLength, setMessagesLength] = useState(0);
   const [messageState, setMessageState] = useState<{
     messages: Message[];
     pending?: string;
@@ -42,13 +36,14 @@ const AudioBot = () => {
     textAreaRef.current?.focus();
   }, []);
 
+
+
   //handle form submission
   async function handleSubmit() {
-    // e.preventDefault();
 
     setError(null);
     setLoading(true);
-    const response = await fetch('http://localhost:5000/recording-start', {
+    const response = await fetch('http://solutions.it-marketing.website:4200/recording-start', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -99,45 +94,26 @@ const AudioBot = () => {
         signal: ctrl.signal,
         onmessage: async (event) => {
           if (event.data === '[DONE]') {
-            if (pending) {
-              // setMessageState((state) => {
-              //   const newMessages = [
-              //     ...state.messages,
-              //     {
-              //       type: 'apiMessage',
-              //       message: state.pending ?? '',
-              //       sourceDocs: state.pendingSourceDocs,
-              //     },
-              //   ];
-              //   setMessagesLength(newMessages.length);
-              //   // speakLastApiMessage(newMessages);
-              //   if (newMessages.length > messagesLength) {
-              //     // only if new message added to messages array
-              //     speakLastApiMessage(newMessages);
-              //   }
-              //   return {
-              //     history: [...state.history, [question, state.pending ?? '']],
-              //     messages: newMessages,
-              //     pending: undefined,
-              //     pendingSourceDocs: undefined,
-              //   };
-              // });
-              setMessageState((state) => ({
-                history: [...state.history, [question, state.pending ?? '']],
-                messages: [
-                  ...state.messages,
-                  {
-                    type: 'apiMessage',
-                    message: pending ?? '',
-                    sourceDocs: state.pendingSourceDocs,
-                  },
-                ],
-                pending: undefined,
-                pendingSourceDocs: undefined,
-              }));
-            }
+
+            setMessageState((state) => ({
+              history: [...state.history, [question, state.pending ?? '']],
+              messages: [
+                ...state.messages,
+                {
+                  type: 'apiMessage',
+                  message: state.pending ?? '',
+                  sourceDocs: state.pendingSourceDocs,
+                },
+              ],
+              pending: undefined,
+              pendingSourceDocs: undefined,
+            }));
+
+
             setLoading(false);
             ctrl.abort();
+
+
           } else {
             const data = JSON.parse(event.data);
             if (data.sourceDocs) {
@@ -201,12 +177,12 @@ const AudioBot = () => {
     <Layout>
       {/* chat top header */}
       <div className={`${styles.chatTopBar} d-flex flex-row`}>
-        <div className="col-12 text-center d-flex flex-row justify-content-between px-2 px-lg-5">
+        <div className="col-12 text-center d-flex flex-row justify-content-between px-2">
           <Image src="/chat-top-bar.png" alt="AI" width={150} height={30} />
         </div>
       </div>
       {/* chat message area */}
-      <div className={`${styles.messageWrapper}`}>
+      <div className={`${styles.messageWrapper}`} style={{height: "74vh"}}>
         <div
           ref={messageListRef}
           className={`${styles.messageContentWrapper} d-flex flex-column`}

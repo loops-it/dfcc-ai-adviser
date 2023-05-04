@@ -30,19 +30,19 @@ export default function Layout({ children }: LayoutProps) {
         <main className="flex w-full flex-1 flex-col overflow-hidden">
           <div
             id="Bot"
-            className={`${styles.mainContainer} container-fluid m-0 p-0`}
+            className={`${styles.mainContainer} m-md-2`}
           >
-            <div className="row">
+            {/* <div classNamse="row"> */}
               {/* chat box */}
-              <div className={`col-lg-12`}>
+              {/* <div className={`col-lg-12`}> */}
                 <div className={`${styles.botChatContainer} p-0 text-dark`}>
                   
                   {/* message content childerns - pages */}
                   {children}
                 </div>
               </div>
-            </div>
-          </div>
+            {/* </div> */}
+          {/* </div> */}
         </main>
       </div>
     </div>

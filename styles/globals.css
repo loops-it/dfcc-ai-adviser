@@ -101,7 +101,7 @@ a {
   color: inherit;
   text-decoration: none;
 }
-a, h1, h2, h3, h4, h5, h6, p, button, select, input, label{
+a, h1, h2, h3, h4, h5, h6, p, button, select, input, label, textarea{
   font-family: 'Poppins', sans-serif;
 }
 
@@ -169,11 +169,11 @@ aside.EmojiPickerReact.epr-main{
   background-color: transparent;
   border: solid 1px #000;
   border-radius: 30px;
-  width: 60%;
+  width: 280px;
 }
 
-@media screen and (max-width: 992px) {
+/* @media screen and (max-width: 992px) {
   .welcomeMessageContainer{
-    width: 100%
+    width: 280px
   }
-}
+} */

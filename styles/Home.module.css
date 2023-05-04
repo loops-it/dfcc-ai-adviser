@@ -287,7 +287,7 @@
   border-radius: 25px;
   bottom: 0;
   right: 0;
-  width: 25vw;
+  width: 340px;
 }
 
 .chatContainer {
@@ -325,7 +325,7 @@
   background-color: #fff;
   margin: 10px;
   border-radius: 20px;
-  height: 97vh;
+  /* height: 97vh; */
   /* height: 100svh; */
   position: relative;
 }
@@ -351,8 +351,8 @@
 }
 
 .inputContainer {
-  position: absolute;
-  bottom: 0;
+  /* position: absolute; */
+  /* bottom: 0; */
   /* padding: 20px 20px;
   padding-left: 10px; */
   width: 100%;
@@ -375,7 +375,7 @@
 
 .inputIconContainer {
   position: absolute;
-  /* bottom: 0px; */
+  bottom: 10px;
   right: 25px;
   width: 40px;
   height: 40px;
@@ -478,7 +478,7 @@
 }
 
 .messageWrapper {
-  height: 75vh;
+  height: 68vh;
   overflow-y: scroll;
 }
 
@@ -508,7 +508,7 @@
   background-color: #DDDDDD;
 }
 .botMessageContainer{
-  max-width: 80% !important;
+  max-width: 100% !important;
 }
 .botMessageContainerWrapper{
   max-width: 100% !important;
@@ -621,7 +621,7 @@
   width: 180px !important;
   height: auto !important;
 }
-@media screen and (max-width: 992px){
+@media screen and (max-width: 600px){
   .mainContainer {
     height: 100vh;
     height: 100svh;
@@ -630,6 +630,10 @@
     border: solid 1px #303030;
     border-radius: 25px;
     width: 100vw;
+  }
+  .messageWrapper {
+    height: 78vh;
+    overflow-y: scroll;
   }
 }
 @media screen and (max-width: 600px) {

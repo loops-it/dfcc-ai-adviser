@@ -2,24 +2,12 @@ import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import Layout from '@/components/layout';
 import styles from '@/styles/Home.module.css';
 import { Message } from '@/types/chat';
-import { fetchEventSource } from '@microsoft/fetch-event-source';
 import Image from 'next/image';
-import ReactMarkdown from 'react-markdown';
 import LoadingDots from '@/components/ui/LoadingDots';
 import {
   AiOutlineSend,
-  AiOutlineClose,
-  AiFillStar,
-  AiOutlineStar,
 } from 'react-icons/ai';
 import { Document } from 'langchain/document';
-import LoadingIcons from 'react-loading-icons';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 
 const LiveAgent = () => {
   const [query, setQuery] = useState<string>('');
@@ -35,12 +23,7 @@ const LiveAgent = () => {
     history: [string, string][];
     pendingSourceDocs?: Document[];
   }>({
-    messages: [
-      {
-        message: 'Hi, what would you like to learn about DFCC Bank?',
-        type: 'apiMessage',
-      },
-    ],
+    messages: [],
     history: [],
     pendingSourceDocs: [],
   });
@@ -59,10 +42,21 @@ const LiveAgent = () => {
   const [hover, setHover] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [showChatRating, setShowChatRating] = useState(false);
+  const [agentName, setAgentName] = useState('');
+  const [agentInfoMsg, setAgentInfoMsg] = useState(false);
+  const [agentImage, setAgentImage] = useState('/chat-header.png');
+  const [timerRunning, setTimerRunning] = useState(false);
 
-  const handleCloseAlert = () => {
-    setShowAlert(false);
-  };
+
+
+
+  useEffect(() => {
+    // console.log("text there : ", checkNotSure)
+  }, [ agentName, agentInfoMsg, agentImage]);
+
+
+
+
 
   useEffect(() => {
     const now = Date.now();
@@ -71,52 +65,79 @@ const LiveAgent = () => {
   }, []);
   console.log('user id : ', id);
 
+
+
+
+
+
   useEffect(() => {
-    console.log('----------', id);
-    const interval = setInterval(async () => {
-      const response = await fetch('http://localhost:5000/live-chat-agent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ chatId: id }),
-      });
-
-      if (response.status !== 200) {
-        const error = await response.json();
-        throw new Error(error.message);
-      }
-      const data = await response.json();
-      console.log('response : ', data.agentMessage);
-      console.log('chat status : ', data.chatStatus);
-
-      setMessageState((state) => ({
-        ...state,
-        messages: [
-          ...state.messages,
-          {
-            type: 'userMessage',
-            message: data.agentMessage,
+    console.log("----------", id)
+    let intervalId: any;
+    if (timerRunning) {
+      intervalId = setInterval(async () => {
+        const response = await fetch('http://localhost:5000/live-chat-agent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        ],
-        pending: undefined,
-      }));
+          body: JSON.stringify({ chatId: id }),
+        });
 
-      if(data.chatStatus === "closed"){
-        setShowChatRating(true);
-      }
-      else{
-        setShowChatRating(false);
-      }
+        if (response.status !== 200) {
+          const error = await response.json();
+          throw new Error(error.message);
+        }
+        const data = await response.json();
+        console.log('live chat agent : ', data.agent_id);
+        console.log('live chat status : ', data.chat_status);
+        console.log('live chat message : ', data.agent_message);
 
-    }, 5000);
+        if (data.chat_status === "closed") {
+          setShowChatRating(true);
+        }
+        else {
+          setShowChatRating(false);
+          setAgentInfoMsg(false);
+          if (data.agent_id != "unassigned") {
+            if (!data.profile_picture) {
+              setAgentImage("/chat-header.png");
+            }
+            else {
+              setAgentImage("http://localhost:5000/uploads/" + data.profile_picture);
+            }
+            setAgentName(data.agent_name);
 
-    // {data && (
-    //     <p>{data.message}</p>
-    //   )}
+            setAgentInfoMsg(true);
+            if (data.agent_message != null) {
+              setMessageState((state) => ({
+                ...state,
+                messages: [
+                  ...state.messages,
+                  {
+                    type: 'apiMessage',
+                    message: data.agent_message,
+                  },
+                ],
+                pending: undefined,
+              }));
+            }
+          }
+        }
+        }, 5000);
+    }
 
-    return () => clearInterval(interval);
-  }, [id]);
+    return () => clearInterval(intervalId);
+  }, [timerRunning, id]);
+
+//   useEffect(()=>{
+//     if(timerRunning){
+//       console.log("thinushika")
+//     }
+//   },[])
+//   const handleSubmitOne = ()=>{
+//     console.log('=== button clicked ====')
+//     setTimerRunning(true)
+// };
 
   useEffect(() => {
     console.log(selectedLanguage);
@@ -147,7 +168,7 @@ const LiveAgent = () => {
       messages: [
         ...state.messages,
         {
-          type: 'userMessage',
+          type: 'apiMessage',
           message: question,
         },
       ],
@@ -166,6 +187,7 @@ const LiveAgent = () => {
       },
       body: JSON.stringify({
         user_Message: question,
+        language: selectedLanguage,
         chatId: id,
       }),
     });
@@ -175,11 +197,14 @@ const LiveAgent = () => {
       throw new Error(error.message);
     }
     const data = await response.json();
-    setAlertMessage(data.success);
-    setLoading(false);
-    setShowAlert(true);
-
-    console.log('response : ', data.success);
+    if(data.success === "Added"){
+      setTimerRunning(true);
+      setLoading(false);
+      setShowAlert(true);
+    }
+    else{
+      console.log('response : ', 'Insert Fail');
+    }
 
     const ctrl = new AbortController();
   }
@@ -196,6 +221,8 @@ const LiveAgent = () => {
     [query],
   );
 
+ 
+
   const chatMessages = useMemo(() => {
     return messages.filter(
       (message) =>
@@ -204,6 +231,11 @@ const LiveAgent = () => {
   }, [messages]);
 
   console.log('messages : ', messages);
+
+
+
+
+
 
   //scroll to bottom of chat
   useEffect(() => {
@@ -240,27 +272,104 @@ const LiveAgent = () => {
     <Layout>
       {/* chat top header */}
       <div className={`${styles.chatTopBar} d-flex flex-row`}>
-        <div className="col-12 text-center d-flex flex-row justify-content-between px-2 px-lg-5">
+        <div className="col-12 text-center d-flex flex-row justify-content-between px-2">
           <Image src="/chat-top-bar.png" alt="AI" width={150} height={30} />
         </div>
       </div>
-      {showAlert && (
-        <div
-          className="alert alert-success alert-dismissible fade show"
-          role="alert"
-        >
-          <p>Please wait...</p>
-          <button
-            type="button"
-            className="btn-close"
-            data-bs-dismiss="alert"
-            aria-label="Close"
-            onClick={handleCloseAlert}
-          ></button>
-        </div>
-      )}
+
+
+
 
       <div className={`${styles.messageWrapper}`}>
+        <div
+          className={`${styles.botChatMsgContainer} d-flex flex-column my-2`}
+        >
+          <div className="d-flex">
+            <Image
+              src="/chat-header.png"
+              alt="AI"
+              width="40"
+              height="40"
+            /></div>
+          <div className={`d-flex flex-column py-3 `}>
+            <div
+              className={`welcomeMessageContainer d-flex flex-column align-items-center`}
+            >
+              <Image
+                src="/language-img.png"
+                alt="AI"
+                width={220}
+                height={150}
+              />
+              <p className="mt-2">Hello, Welcome to DFCC Bank. Please select the language to get started.</p>
+              <p className="">ආයුබෝවන්, DFCC බැංකුවට සාදරයෙන් පිළිගනිමු. ඔබේ ප්‍රශ්නවලට පිළිතුරු සැපයීම සඳහා කරුණාකර භාෂාව තෝරන්න.</p>
+              <p className="">வணக்கம், DFCC வங்கிக்கு உங்களை வரவேற்கிறோம். தொடர்வதற்கு, விருப்பமான மொழியைத் தேர்ந்தெடுக்கவும்</p>
+
+              <div className="d-flex flex-row welcome-language-select">
+                <div className="col-4 p-1">
+                  <button className=' px-3 py-2 rounded' onClick={() => {
+                    setSelectedLanguage('ENGLISH');
+                    setMessageState((state) => ({
+                      ...state,
+                      messages: [
+                        ...state.messages,
+                        {
+                          type: 'apiMessage',
+                          message: 'English',
+                        },
+                      ],
+                      pending: undefined,
+                    }));
+                  }}>English</button>
+                </div>
+                <div className="col-4 p-1">
+                  <button className='px-3 py-2 rounded' onClick={() => {
+                    setSelectedLanguage('SINHALA');
+                    setMessageState((state) => ({
+                      ...state,
+                      messages: [
+                        ...state.messages,
+                        {
+                          type: 'apiMessage',
+                          message: 'Sinhala',
+                        },
+                      ],
+                      pending: undefined,
+                    }));
+                  }}>Sinhala</button>
+                </div>
+
+                <div className="col-4 p-1">
+                  <button className='px-3 py-2 rounded' onClick={() => {
+                    setSelectedLanguage('TAMIL');
+                    setMessageState((state) => ({
+                      ...state,
+                      messages: [
+                        ...state.messages,
+                        {
+                          type: 'apiMessage',
+                          message: 'Tamil',
+                        },
+                      ],
+                      pending: undefined,
+                    }));
+                  }}>Tamil</button>
+                </div>
+
+              </div>
+            </div>
+            {/* <p className={`${styles.timeText} text-start  mt-2`}>{time}</p> */}
+          </div>
+        </div>
+
+        {
+            agentInfoMsg && (
+              <div className="alert alert-info mx-3 text-center  alert-dismissible fade show" role="alert">
+                Now you are chatting with {agentName}
+                <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            )
+          }
         <div
           ref={messageListRef}
           className={`${styles.messageContentWrapper} d-flex flex-column`}
@@ -285,6 +394,7 @@ const LiveAgent = () => {
               className = styles.apimessage;
               userStyles = 'justify-content-start flex-row float-start';
               wrapper = 'align-items-start justify-content-start';
+
             } else {
               icon = (
                 <Image
@@ -328,67 +438,67 @@ const LiveAgent = () => {
           })}
           {showChatRating && (
             <div className="d-flex flex-column" id='chatRating'>
-            <div className="d-flex">
-              <Image src="/chat-header.png" alt="AI" width="40" height="40" />
-            </div>
-            <div className={`d-flex flex-column px-1 py-2 p-lg-0  ms-lg-2`}>
-              <div
-                className={`welcomeMessageContainer d-flex flex-column align-items-center align-items-lg-start  my-lg-1`}
-              >
-                <div className="container-fluid m-0 p-0">
-                  <div
-                    className={`${styles.botRateRequest} d-flex flex-row my-2 mx-2`}
-                  >
+              <div className="d-flex">
+                <Image src="/chat-header.png" alt="AI" width="40" height="40" />
+              </div>
+              <div className={`d-flex flex-column px-1 py-2`}>
+                <div
+                  className={`welcomeMessageContainer d-flex flex-column align-items-center`}
+                >
+                  <div className="container-fluid m-0 p-0">
                     <div
-                      className={`${styles.botRatingContainer} d-flex flex-column my-1`}
+                      className={`${styles.botRateRequest} d-flex flex-row my-2 mx-2`}
                     >
-                      <p className={`${styles.rateTitle} mb-0 text-dark`}>
-                        Rate your conversation
-                      </p>
-                      <p className="text-dark mb-0">Add your rating</p>
-                      <div className="star-rating">
-                        {[...Array(5)].map((star, index) => {
-                          index += 1;
-                          return (
-                            <button
-                              type="button"
-                              key={index}
-                              className={
-                                index <= (hover || rating) ? 'on' : 'off'
-                              }
-                              onClick={() => {
-                                setRating(index);
-                              }}
-                              onMouseEnter={() => setHover(index)}
-                              onMouseLeave={() => setHover(rating)}
-                            >
-                              <span className="star">&#9733;</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <p className={` mb-0 mt-3 text-dark`}>Your feedback :</p>
-                      <textarea
-                        className={`${styles.textarea} p-2 rounded`}
-                        rows={3}
-                        maxLength={512}
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                      />
-
-                      <button
-                        onClick={sendRateValues}
-                        className="text-white bg-dark p-2 mt-2 rounded"
+                      <div
+                        className={`${styles.botRatingContainer} d-flex flex-column my-1`}
                       >
-                        SEND
-                      </button>
+                        <p className={`${styles.rateTitle} mb-0 text-dark`}>
+                          Rate your conversation
+                        </p>
+                        <p className="text-dark mb-0">Add your rating</p>
+                        <div className="star-rating">
+                          {[...Array(5)].map((star, index) => {
+                            index += 1;
+                            return (
+                              <button
+                                type="button"
+                                key={index}
+                                className={
+                                  index <= (hover || rating) ? 'on' : 'off'
+                                }
+                                onClick={() => {
+                                  setRating(index);
+                                }}
+                                onMouseEnter={() => setHover(index)}
+                                onMouseLeave={() => setHover(rating)}
+                              >
+                                <span className="star">&#9733;</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className={` mb-0 mt-3 text-dark`}>Your feedback :</p>
+                        <textarea
+                          className={`${styles.textarea} p-2 rounded`}
+                          rows={3}
+                          maxLength={512}
+                          value={inputValue}
+                          onChange={(e) => setInputValue(e.target.value)}
+                        />
+
+                        <button
+                          onClick={sendRateValues}
+                          className="text-white bg-dark p-2 mt-2 rounded"
+                        >
+                          SEND
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
+                {/* <p className={`${styles.timeText} text-start  mt-2`}>{time}</p> */}
               </div>
-              {/* <p className={`${styles.timeText} text-start  mt-2`}>{time}</p> */}
             </div>
-          </div>
           )
           }
         </div>
@@ -396,41 +506,41 @@ const LiveAgent = () => {
 
       {/* input fields =================*/}
       <div className={`${styles.inputContainer}`}>
-        <form onSubmit={handleSubmit}>
-          <textarea
-            disabled={loading}
-            onKeyDown={handleEnter}
-            ref={textAreaRef}
-            autoFocus={false}
-            rows={1}
-            maxLength={512}
-            id="userInput"
-            name="userInput"
-            placeholder={
-              loading
-                ? 'Waiting for response...'
-                : 'What is this question about?'
-            }
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className={styles.textarea}
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className={`${styles.inputIconContainer} `}
-          >
-            {loading ? (
-              <div className={styles.loadingwheel}>
-                <LoadingDots color="#fff" />
-                {/* <LoadingIcons.ThreeDots /> */}
-              </div>
-            ) : (
-              // Send icon SVG in input field
-              <AiOutlineSend className={styles.sendIcon} />
-            )}
-          </button>
-        </form>
+        {/* <form onSubmit={handleSubmit}> */}
+        <textarea
+          disabled={loading}
+          onKeyDown={handleEnter}
+          ref={textAreaRef}
+          autoFocus={false}
+          rows={1}
+          maxLength={512}
+          id="userInput"
+          name="userInput"
+          placeholder={
+            loading
+              ? 'Waiting for response...'
+              : 'What is this question about?'
+          }
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className={styles.textarea}
+        />
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className={`${styles.inputIconContainer} `}
+        >
+          {loading ? (
+            <div className={styles.loadingwheel}>
+              <LoadingDots color="#fff" />
+              {/* <LoadingIcons.ThreeDots /> */}
+            </div>
+          ) : (
+            // Send icon SVG in input field
+            <AiOutlineSend className={styles.sendIcon} />
+          )}
+        </button>
+        {/* </form> */}
       </div>
       {error && (
         <div className="border border-red-400 rounded-md p-4">
