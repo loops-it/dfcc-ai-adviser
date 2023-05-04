@@ -26,7 +26,7 @@ export default function Chatbot() {
   const { messages, pending, history, pendingSourceDocs } = messageState;
   const messageListRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState('english');
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [id, setId] = useState('');
   const [liveAgent, setLiveAgent] = useState(false);
   const [rating, setRating] = useState(0);
@@ -581,7 +581,7 @@ export default function Chatbot() {
                     <button
                       className=" px-3 py-2 rounded"
                       onClick={() => {
-                        setSelectedLanguage('english');
+                        setSelectedLanguage('English');
                         setMessageState((state) => ({
                           ...state,
                           messages: [
@@ -602,7 +602,7 @@ export default function Chatbot() {
                     <button
                       className="px-3 py-2 rounded"
                       onClick={() => {
-                        setSelectedLanguage('sinhala');
+                        setSelectedLanguage('Sinhala');
                         setMessageState((state) => ({
                           ...state,
                           messages: [
@@ -624,7 +624,7 @@ export default function Chatbot() {
                     <button
                       className="px-3 py-2 rounded"
                       onClick={() => {
-                        setSelectedLanguage('tamil');
+                        setSelectedLanguage('Tamil');
                         setMessageState((state) => ({
                           ...state,
                           messages: [
